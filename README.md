@@ -1,3 +1,5 @@
+[![Test](https://github.com/snobb/go-dotenv/actions/workflows/test.yml/badge.svg)](https://github.com/snobb/go-dotenv/actions/workflows/test.yml)
+
 # Go-DotEnv
 
 A small implementation of nodejs dotenv library that populates env variables from a provided `.env` file (the file name is customisable).
