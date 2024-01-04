@@ -59,6 +59,11 @@ func LoadEnvFromReader(r io.Reader) error {
 		if os.Getenv("DEBUG") != "" {
 			fmt.Printf("dotenv: %s=%s\n", key, value)
 		}
+
+		if os.Getenv(key) != "" {
+			continue
+		}
+
 		os.Setenv(key, value)
 	}
 
