@@ -6,19 +6,29 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"path/filepath"
 	"strings"
 )
 
 const defaultFile = ".env"
 
+// Options contain the options and defaults for the Env loader.
+var Options = struct {
+	OverrideExisting bool
+}{}
+
 // LoadEnvFromFile loads the specified file with env variables (same syntax as in shell) and
 // populates the env variables for the running process.
-func LoadEnvFromFile(filepath string) error {
-	fh, err := os.Open(filepath)
+func LoadEnvFromFile(path string) (err error) {
+	var fh *os.File
+
+	fh, err = os.Open(filepath.Clean(path))
 	if err != nil {
 		return err
 	}
-	defer fh.Close()
+	defer func() {
+		err = fh.Close()
+	}()
 
 	return LoadEnvFromReader(fh)
 }
@@ -60,16 +70,14 @@ func LoadEnvFromReader(r io.Reader) error {
 			fmt.Printf("dotenv: %s=%s\n", key, value)
 		}
 
-		if os.Getenv(key) != "" {
+		if !Options.OverrideExisting && os.Getenv(key) != "" {
 			continue
 		}
 
-		os.Setenv(key, value)
+		if err := os.Setenv(key, value); err != nil {
+			return err
+		}
 	}
 
-	if err := scanner.Err(); err != nil {
-		return err
-	}
-
-	return nil
+	return scanner.Err()
 }
