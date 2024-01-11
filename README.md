@@ -11,7 +11,7 @@ https://github.com/kelseyhightower/envconfig
 The env file can have the following format:
 
 ```bash
-$ cat .cenv
+$ cat .env
 CONSUMER_PORT=8085
 CONSUMER_LOG_LEVEL=debug
 CONSUMER_CONCURRENCY=3
