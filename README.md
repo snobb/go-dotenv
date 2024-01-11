@@ -11,7 +11,7 @@ https://github.com/kelseyhightower/envconfig
 The env file can have the following format:
 
 ```bash
-$ cat .cenv
+$ cat .env
 CONSUMER_PORT=8085
 CONSUMER_LOG_LEVEL=debug
 CONSUMER_CONCURRENCY=3
@@ -26,6 +26,8 @@ With default name:
 ...
 
 func init() {
+    dotenv.Options.OverrideExisting = true // reset existing env variables.
+
     if err := dotenv.LoadEnv(); err != nil {
         slog.Error("dotenv", err)
     }

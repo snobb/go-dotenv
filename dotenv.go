@@ -14,6 +14,8 @@ const defaultFile = ".env"
 
 // Options contain the options and defaults for the Env loader.
 var Options = struct {
+	// On true  - override existing env variables with values from file.
+	// On false - retain the original values of existing env variables.
 	OverrideExisting bool
 }{}
 
