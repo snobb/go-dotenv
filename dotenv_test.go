@@ -13,32 +13,13 @@ import (
 
 func TestLoadEnvFromReader(t *testing.T) {
 	tests := []struct {
-		name    string
-		payload []string
-		expect  map[string]string
-		wantErr bool
+		name             string
+		preset           map[string]string
+		overrideExisting bool
+		payload          []string
+		expect           map[string]string
+		wantErr          bool
 	}{
-		{
-			name: "should load data from file and populate env",
-			payload: []string{
-				"  #doesnt = exist",
-				"foo=bar",
-				"fooSpace= bar",
-				"fooQuote=\" baz \"",
-				"baz=hello world",
-				"bazSpace=\"hello world   \"",
-				"bazEqual=hello=world",
-			},
-			expect: map[string]string{
-				"foo":      "bar",
-				"fooSpace": "bar",
-				"fooQuote": " baz ",
-				"baz":      "hello world",
-				"bazSpace": "hello world   ",
-				"bazEqual": "hello=world",
-				"#doesnt":  "",
-			},
-		},
 		{
 			name: "should return an error on invalid records",
 			payload: []string{
@@ -53,11 +34,66 @@ func TestLoadEnvFromReader(t *testing.T) {
 			},
 			wantErr: true,
 		},
+		{
+			name:             "should load data from file and populate env and override existing",
+			overrideExisting: true,
+			preset: map[string]string{
+				"existing": "foo",
+			},
+			payload: []string{
+				"DEBUG=1",
+				"  #doesnt = exist",
+				"foo=bar",
+				"existing=baz",
+			},
+			expect: map[string]string{
+				"foo":      "bar",
+				"existing": "baz",
+			},
+		},
+		{
+			name: "should load data from file and populate env",
+			preset: map[string]string{
+				"existing": "foo",
+			},
+			payload: []string{
+				"DEBUG=1",
+				"  #doesnt = exist",
+				"foo=bar",
+				"fooSpace= bar",
+				"fooQuote=\" baz \"",
+				"baz=hello world",
+				"bazSpace=\"hello world   \"",
+				"bazEqual=hello=world",
+				"existing=baz",
+			},
+			expect: map[string]string{
+				"foo":      "bar",
+				"fooSpace": "bar",
+				"fooQuote": " baz ",
+				"baz":      "hello world",
+				"bazSpace": "hello world   ",
+				"bazEqual": "hello=world",
+				"#doesnt":  "",
+				"existing": "foo", // not overriden
+			},
+		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			rr := bytes.NewReader([]byte(strings.Join(tt.payload, "\n")))
+
+			for k, v := range tt.preset {
+				t.Setenv(k, v)
+			}
+
+			if tt.overrideExisting {
+				dotenv.Options.OverrideExisting = true
+				defer func() {
+					dotenv.Options.OverrideExisting = false
+				}()
+			}
 
 			err := dotenv.LoadEnvFromReader(rr)
 			if tt.wantErr {
@@ -70,6 +106,7 @@ func TestLoadEnvFromReader(t *testing.T) {
 			for key, value := range tt.expect {
 				varValue := os.Getenv(key)
 				assert.Equal(t, value, varValue)
+				os.Unsetenv(key)
 			}
 		})
 	}
